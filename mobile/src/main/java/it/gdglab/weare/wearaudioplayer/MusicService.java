@@ -9,6 +9,11 @@ import android.media.MediaPlayer.OnCompletionListener;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.util.Log;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MusicService extends Service {
 
@@ -18,15 +23,30 @@ public class MusicService extends Service {
 	private static final int NOTIFICATION_ID = 1;
 	private MediaPlayer mPlayer;
 	private int mStartID;
+    private int currentSongIndex = 0;
+    SongsManager songManager = null;
+    ArrayList<HashMap<String, String>> songsList = null;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
 
-		// Set up the Media Player
-		mPlayer = MediaPlayer.create(this, R.raw.badnews);
 
-		if (null != mPlayer) {
+
+
+        songManager = new SongsManager();
+        songsList = new ArrayList<HashMap<String, String>>();
+        songsList = songManager.getPlayList();
+
+        // Set up the Media Player
+        //mPlayer = MediaPlayer.create(this, R.raw.badnews);
+
+        mPlayer = new MediaPlayer();
+        // By default play first song
+        playSong(0);
+        currentSongIndex = 0;
+
+        if (null != mPlayer) {
 
 			mPlayer.setLooping(false);
 
@@ -45,9 +65,11 @@ public class MusicService extends Service {
 		}
 	}
 
-	
+
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startid) {
+
+
 
 		if (null != mPlayer) {
 
@@ -56,7 +78,27 @@ public class MusicService extends Service {
 
             if (intent.hasExtra("command")){
                 String command = intent.getStringExtra("command");
-                if (command.equalsIgnoreCase("play")){
+                if (command.equalsIgnoreCase("next")){
+                    if(currentSongIndex < (songsList.size() - 1)){
+                        playSong(currentSongIndex + 1);
+                        currentSongIndex = currentSongIndex + 1;
+                    }else{
+                        // play first song
+                        playSong(0);
+                        currentSongIndex = 0;
+                    }
+                }
+                else if (command.equalsIgnoreCase("prev")){
+                    if(currentSongIndex > 0){
+                        playSong(currentSongIndex - 1);
+                        currentSongIndex = currentSongIndex - 1;
+                    }else{
+                        // play last song
+                        playSong(songsList.size() - 1);
+                        currentSongIndex = songsList.size() - 1;
+                    }
+                }
+                else if (command.equalsIgnoreCase("play")){
                     if (mPlayer.isPlaying()) {
 
 
@@ -104,5 +146,24 @@ public class MusicService extends Service {
 		return null;
 
 	}
+    /**
+     * Function to play a song
+     * @param songIndex - index of song
+     * */
+    public void  playSong(int songIndex){
+        // Play song
+        try {
+            mPlayer.reset();
+            mPlayer.setDataSource(songsList.get(songIndex).get("songPath"));
+            mPlayer.prepare();
+            mPlayer.start();
 
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

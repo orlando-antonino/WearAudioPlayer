@@ -13,6 +13,10 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageButton;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MusicServiceClient extends Activity {
 
@@ -56,8 +60,8 @@ public class MusicServiceClient extends Activity {
 
         //musicServiceIntent.putExtra("NOT",notif);
 
-		final Button startButton = (Button) findViewById(R.id.start_button);
-		startButton.setOnClickListener(new OnClickListener() {
+		final ImageButton playButton = (ImageButton) findViewById(R.id.btnPlay);
+        playButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View src) {
 				
 				// Start the MusicService using the Intent
@@ -68,16 +72,32 @@ public class MusicServiceClient extends Activity {
 			}
 		});
 
-		final Button stopButton = (Button) findViewById(R.id.stop_button);
-		stopButton.setOnClickListener(new OnClickListener() {
-			public void onClick(View src) {
+        final ImageButton nextButton = (ImageButton) findViewById(R.id.btnNext);
+        nextButton.setOnClickListener(new OnClickListener() {
+            public void onClick(View src) {
 
-				// Stop the MusicService using the Intent
-                musicServiceIntent.putExtra("command", "stop");
-				stopService(musicServiceIntent);
+                // Start the MusicService using the Intent
 
-			}
-		});
+                musicServiceIntent.putExtra("command", "next");
+                startService(musicServiceIntent);
+
+            }
+        });
+        final ImageButton prevButton = (ImageButton) findViewById(R.id.btnPrevious);
+        prevButton.setOnClickListener(new OnClickListener() {
+            public void onClick(View src) {
+
+                // Start the MusicService using the Intent
+
+                musicServiceIntent.putExtra("command", "prev");
+                startService(musicServiceIntent);
+
+            }
+        });
+
+
+        musicServiceIntent.putExtra("command", "list");
+        startService(musicServiceIntent);
 
         this.createNotify();
 	}
@@ -89,8 +109,10 @@ public class MusicServiceClient extends Activity {
         notifBuilder.setSmallIcon(R.drawable.ic_launcher);
         notifBuilder.setContentTitle("WearMusicPlayer");
         notifBuilder    .setContentText("It is time to listen");
-        notifBuilder    .addAction(R.drawable.ic_start, "Start", createIntent("start", notificationId));
-        notifBuilder    .addAction(R.drawable.ic_stop, "Stop", createIntent("stop", notificationId));
+        notifBuilder    .addAction(android.R.drawable.ic_media_play, "Play/Pause", createIntent("play", notificationId));
+        notifBuilder    .addAction(android.R.drawable.ic_media_previous, "Prev", createIntent("prev", notificationId));
+        notifBuilder    .addAction(android.R.drawable.ic_media_next, "Next", createIntent("next", notificationId));
+
 
         NotificationManagerCompat notificationManager =
                 NotificationManagerCompat.from(getApplicationContext());
@@ -104,7 +126,7 @@ public class MusicServiceClient extends Activity {
         Intent intent = null;
 
         switch (extra) {
-            case "start":
+            case "play":
                 intent =  new Intent("play")
                         .setClass(getBaseContext(), NotificationReceiver.class);
                 break;
@@ -113,8 +135,14 @@ public class MusicServiceClient extends Activity {
                 intent =  new Intent("stop")
                         .setClass(getBaseContext(), NotificationReceiver.class);
                 break;
-
-
+            case "next":
+                intent =  new Intent("next")
+                        .setClass(getBaseContext(), NotificationReceiver.class);
+                break;
+            case "prev":
+                intent =  new Intent("prev")
+                        .setClass(getBaseContext(), NotificationReceiver.class);
+                break;
 
             default:
                 break;
